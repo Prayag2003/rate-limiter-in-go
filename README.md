@@ -144,11 +144,3 @@ Loaded configuration from config.yaml
 [Simulation] RPS: 200 | Duration: 10s | Allowed: 980 | Rejected: 1020 | Time: 10.03s
 ```
 
----
-
-## Extending the Project
-
-* Add support for more rate limiting algorithms (e.g., Fixed Window, Sliding Log)
-* Add HTTP middleware to apply limiters on API endpoints
-* Add benchmarking and profiling utilities
-* Add metrics export (Prometheus, etc.) for monitoring
