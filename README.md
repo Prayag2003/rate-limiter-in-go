@@ -42,6 +42,7 @@ Clone the repo:
 git clone https://github.com/Prayag2003/rate-limiter-in-go.git
 cd rate-limiter-in-go
 go mod tidy
+cp .env.example .env  
 ````
 
 ---
@@ -50,7 +51,6 @@ go mod tidy
 
 #### Using `config.yaml` (preferred)
 
-Create a `config.yaml` in the root directory:
 
 ```yaml
 rate_limiter_type: token       # "token" or "leaky"
