@@ -1,14 +1,41 @@
 package main
 
 import (
+	"flag"
+	"fmt"
+
+	"github.com/Prayag2003/rate-limiter-in-go/config"
 	"github.com/Prayag2003/rate-limiter-in-go/internal/limiter"
 	"github.com/Prayag2003/rate-limiter-in-go/internal/simulator"
 )
 
 func main() {
-	tokenBucketLimiter := limiter.NewTokenBucket(100, 5)
-	leakyBucketLimiter := limiter.NewLeakyBucket(100, 50)
+	limiterTypeFlag := flag.String("type", "", "Rate limiter type override (token or leaky)")
+	flag.Parse()
 
-	simulator.SimulateLimiter("TokenBucket", tokenBucketLimiter, 1000, 10)
-	simulator.SimulateLimiter("LeakyBucket", leakyBucketLimiter, 1000, 10)
+	cfg := config.LoadConfig()
+
+	// Override from CLI if provided
+	if *limiterTypeFlag != "" {
+		fmt.Println("[CLI] Overriding limiter type to:", *limiterTypeFlag)
+		cfg.RateLimiterType = *limiterTypeFlag
+	}
+
+	// Choose limiter
+	var limiterInstance limiter.RateLimiter
+	switch cfg.RateLimiterType {
+	case "token":
+		limiterInstance = limiter.NewTokenBucket(cfg.Capacity, cfg.RefillRate)
+	case "leaky":
+		limiterInstance = limiter.NewLeakyBucket(cfg.Capacity, cfg.LeakRate)
+	default:
+		panic("Unsupported RATE_LIMITER_TYPE: " + cfg.RateLimiterType)
+	}
+
+	simulator.RunRealisticSimulation(
+		limiterInstance,
+		cfg.RPS,
+		cfg.DurationSec,
+		cfg.Concurrency,
+	)
 }
