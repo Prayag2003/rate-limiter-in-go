@@ -1,0 +1,7 @@
+rate_limiter_type: token
+capacity: 200
+refill_rate: 100
+leak_rate: 100
+rps: 200
+duration_sec: 10
+concurrency: 40

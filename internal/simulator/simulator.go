@@ -8,29 +8,51 @@ import (
 	"github.com/Prayag2003/rate-limiter-in-go/internal/limiter"
 )
 
-func SimulateLimiter(name string, rl limiter.RateLimiter, totalRequests int, concurrent int) {
+func RunRealisticSimulation(limiter limiter.RateLimiter, rps, durationSec, concurrency int) {
+	totalRequests := rps * durationSec
 	var wg sync.WaitGroup
-	var allowed, rejected int64
+	var mu sync.Mutex
+
+	allowed := 0
+	rejected := 0
+
+	requests := make(chan struct{}, totalRequests)
+	for i := 0; i < totalRequests; i++ {
+		requests <- struct{}{}
+	}
+	close(requests)
 
 	start := time.Now()
 
-	for i := 0; i < concurrent; i++ {
-		wg.Add(1)
+	wg.Add(concurrency)
+	for i := 0; i < concurrency; i++ {
 		go func() {
 			defer wg.Done()
-			for j := 0; j < totalRequests/concurrent; j++ {
-				if rl.Allow() {
+			ticker := time.NewTicker(time.Second / time.Duration(rps/concurrency))
+			defer ticker.Stop()
+
+			for range ticker.C {
+				_, ok := <-requests
+				if !ok {
+					return
+				}
+
+				if limiter.Allow() {
+					mu.Lock()
 					allowed++
+					mu.Unlock()
 				} else {
+					mu.Lock()
 					rejected++
+					mu.Unlock()
 				}
 			}
-			time.Sleep(5 * time.Second)
 		}()
 	}
 
 	wg.Wait()
-	duration := time.Since(start)
+	elapsed := time.Since(start)
 
-	fmt.Printf("[%s] Allowed: %d | Rejected: %d | Simulation Duration: %s\n", name, allowed, rejected, duration)
+	fmt.Printf("[Simulation] RPS: %d | Duration: %ds | Allowed: %d | Rejected: %d | Time: %.2fs\n",
+		rps, durationSec, allowed, rejected, elapsed.Seconds())
 }
