@@ -9,6 +9,19 @@ A simple and extensible rate limiting library in Go, implementing **Token Bucket
 
 ---
 
+<table>
+    <tr>
+        <td align="center">
+            <h2>Token Bucket</h2>
+            <img src="assets/token_bucket.png" alt="Token Bucket" width="400" height="300" />
+        </td>
+        <td align="center">
+            <h2>Leaky Bucket</h2>
+            <img src="assets/leaky_bucket.png" alt="Leaky Bucket" width="400" height="300" />
+        </td>
+    </tr>
+</table>
+
 ## Features
 
 - **Token Bucket** and **Leaky Bucket** rate limiting algorithms  
