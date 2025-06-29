@@ -3,10 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"net/http"
 
 	"github.com/Prayag2003/rate-limiter-in-go/config"
 	"github.com/Prayag2003/rate-limiter-in-go/internal/limiter"
-	"github.com/Prayag2003/rate-limiter-in-go/internal/simulator"
+	"github.com/Prayag2003/rate-limiter-in-go/middleware"
 )
 
 func main() {
@@ -15,13 +17,11 @@ func main() {
 
 	cfg := config.LoadConfig()
 
-	// Override from CLI if provided
 	if *limiterTypeFlag != "" {
 		fmt.Println("[CLI] Overriding limiter type to:", *limiterTypeFlag)
 		cfg.RateLimiterType = *limiterTypeFlag
 	}
 
-	// Choose limiter
 	var limiterInstance limiter.RateLimiter
 	switch cfg.RateLimiterType {
 	case "token":
@@ -32,10 +32,13 @@ func main() {
 		panic("Unsupported RATE_LIMITER_TYPE: " + cfg.RateLimiterType)
 	}
 
-	simulator.RunRealisticSimulation(
-		limiterInstance,
-		cfg.RPS,
-		cfg.DurationSec,
-		cfg.Concurrency,
-	)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello, World!"))
+	})
+
+	wrappedMux := middleware.RateLimiterMiddleware(limiterInstance)(mux)
+
+	fmt.Println("Starting HTTP server on :8080")
+	log.Fatal(http.ListenAndServe(":8080", wrappedMux))
 }
